@@ -124,7 +124,7 @@ def parse_hours(text):
     if m:
         h = float(m.group(1))
         if 4 <= h <= 80:
-            return h, h >= 35
+            return h, h > 30  # ONS: part time is 30 hours a week or fewer
     ft = bool(re.search(r"full[- ]?time", t))
     pt = bool(re.search(r"part[- ]?time", t))
     if ft and not pt:
@@ -164,7 +164,8 @@ def make_job(source, source_id, title, employer, url, category, **kw):
 
 
 def _salary_snippet(text):
-    m = re.search(r"(?:salary|pay|rate)[^£\n]{0,40}(£[^.\n]{0,60})", text or "", re.I)
+    # stops at "(" so "£25,000 per annum (£14.14/hr)" isn't read as a £14-£25,000 range
+    m = re.search(r"(?:salary|pay|rate)[^£\n]{0,40}(£[^.\n(]{0,60})", text or "", re.I)
     return m.group(1) if m else ""
 
 

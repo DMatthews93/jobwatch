@@ -1,6 +1,6 @@
 import unittest
 
-from fetchers.common import infer_contract, parse_hours, parse_salary
+from fetchers.common import enrich, infer_contract, make_job, parse_hours, parse_salary
 
 
 class SalaryTests(unittest.TestCase):
@@ -38,7 +38,14 @@ class SalaryTests(unittest.TestCase):
 class HoursContractTests(unittest.TestCase):
     def test_explicit_hours(self):
         self.assertEqual(parse_hours("20 hours per week"), (20.0, False))
+        self.assertEqual(parse_hours("30 hours per week"), (30.0, False))
+        self.assertEqual(parse_hours("34 hours per week"), (34.0, True))
         self.assertEqual(parse_hours("37.5 hours a week"), (37.5, True))
+
+    def test_salary_with_hourly_rate_in_brackets(self):
+        job = enrich(make_job("employer", "1", "Customer Support Agent", "Atom bank", "u", "gen"),
+                     "Salary: £25,000 per annum ( £14.14/hr) + Discretionary Cash Bonus")
+        self.assertEqual((job["salary_min"], job["salary_max"]), (25000, 25000))
 
     def test_full_and_part_time(self):
         self.assertEqual(parse_hours("Full-time"), (None, True))
