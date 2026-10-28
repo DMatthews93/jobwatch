@@ -10,15 +10,17 @@ CACHE_FILE = os.path.join("data", "geocache.json")
 POSTCODE = re.compile(r"\b([A-Z]{1,2}\d[A-Z\d]?)\s*(\d[A-Z]{2})\b", re.I)
 SKIP_PLACES = {"remote", "uk", "united kingdom", "england", "various", "nationwide",
                "home based", "home-based", "hybrid", "anywhere"}
-MAX_PLACE_LOOKUPS = 40
+MAX_PLACE_LOOKUPS = 150
 
 
 def _load():
     try:
         with open(CACHE_FILE) as f:
-            return json.load(f)
+            cache = json.load(f)
     except (OSError, ValueError):
         return {}
+    # "pl:" entries came from the old first-result lookup (e.g. Sunderland -> a hamlet): redo them
+    return {k: v for k, v in cache.items() if not k.startswith("pl:")}
 
 
 def _save(cache):
@@ -34,10 +36,24 @@ def _postcode_key(location):
 
 def _place_key(location):
     for part in (location or "").split(","):
-        p = part.strip().lower()
+        p = re.sub(r"\s+(city|town)\s+centre$|\s+centre$", "", part.strip().lower())
         if len(p) > 2 and p not in SKIP_PLACES:
-            return f"pl:{p}"
+            return f"p2:{p}"
     return None
+
+
+_PLACE_RANK = {"City": 0, "Town": 1}
+
+
+def best_place(query, results):
+    """Pick the likeliest match: a city, then a town, then anything, named exactly or starting
+    with the query ("Newcastle" -> Newcastle upon Tyne, not the Fife suburb that comes first)."""
+    q = query.lower()
+    named = [r for r in results if r.get("latitude") is not None and
+             ((r.get("name_1") or "").lower() == q or (r.get("name_1") or "").lower().startswith(q + " "))]
+    if not named:
+        return None
+    return min(named, key=lambda r: (_PLACE_RANK.get(r.get("local_type"), 2), (r.get("name_1") or "").lower() != q))
 
 
 def _bulk_postcodes(keys, cache):
@@ -55,9 +71,9 @@ def _bulk_postcodes(keys, cache):
 
 def _place(key, cache):
     try:
-        r = requests.get("https://api.postcodes.io/places", params={"q": key[3:], "limit": 1}, timeout=20)
-        res = (r.json().get("result") or [None])[0]
-        cache[key] = [res["latitude"], res["longitude"]] if res and res.get("latitude") else None
+        r = requests.get("https://api.postcodes.io/places", params={"q": key[3:], "limit": 20}, timeout=20)
+        res = best_place(key[3:], r.json().get("result") or [])
+        cache[key] = [res["latitude"], res["longitude"]] if res else None
     except (requests.RequestException, ValueError, KeyError, TypeError):
         pass  # leave uncached so it is retried next run
 

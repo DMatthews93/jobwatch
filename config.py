@@ -142,7 +142,7 @@ EMPLOYER_SOURCES = [
      "link_contains": "/careers/",
      "title_regex": r"customer|support|service|admin|assistant|advis|agent|complaint|receptionist",
      "detail": True,
-     "location": "Durham"},
+     "location": "Newcastle upon Tyne"},
 ]
 
 # --- Adzuna (PAID, switched off unless ENABLE_ADZUNA=true plus keys) ----------
