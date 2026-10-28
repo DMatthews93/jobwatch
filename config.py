@@ -38,8 +38,9 @@ NHS_EXTRA_KEYWORDS = ["BPAS", "MSI Reproductive Choices", "abortion", "terminati
 PRIVATE_PROVIDERS = ["bpas", "british pregnancy advisory", "msi reproductive", "marie stopes"]
 
 # --- Reed (needs REED_API_KEY). (search words, category) ---------------------
-# categories: nhs, priv (private/independent), res (research), adj (medical-adjacent), soc (social care)
+# categories: nhs, priv (private/independent), res (research), adj (medical-adjacent), soc (social care), gen (other work), aes (aesthetics)
 REED_QUERIES = [
+    # medical and medical-adjacent
     ("obstetrics gynaecology doctor", "priv"),
     ("gynaecology specialist doctor", "priv"),
     ("abortion care doctor", "priv"),
@@ -49,10 +50,34 @@ REED_QUERIES = [
     ("medical affairs women's health", "adj"),
     ("medical advisor pharmaceutical", "adj"),
     ("clinical education obstetrics", "adj"),
+    # aesthetics / cosmetic medicine
+    ("aesthetic doctor", "aes"),
+    ("aesthetic practitioner", "aes"),
+    ("cosmetic doctor", "aes"),
+    ("cosmetic injector", "aes"),
+    ("aesthetic medicine", "aes"),
+    ("cosmetic surgery", "aes"),
+    # care and support work
     ("social care worker", "soc"),
     ("support worker", "soc"),
     ("senior support worker", "soc"),
+    ("care assistant", "soc"),
+    ("care worker", "soc"),
+    ("healthcare assistant", "soc"),
+    # any other decent-paying work (gen = "Other work")
+    ("customer support agent", "gen"),
+    ("customer service advisor", "gen"),
+    ("administrator", "gen"),
+    ("receptionist", "gen"),
+    ("medical receptionist", "gen"),
+    ("office assistant", "gen"),
+    ("data entry", "gen"),
 ]
+# Everyday jobs are searched closer to home than medical roles
+LOCAL_RADIUS_MILES = 25
+LOCAL_CATEGORIES = ("soc", "gen")
+# Reed is only queried every N hours (and on manual runs) to be gentle on its API
+REED_EVERY_HOURS = 2
 REED_FULL_TIME_ONLY = True
 REED_MAX_RESULTS = 300    # per query
 

@@ -39,6 +39,7 @@ label{color:var(--mut);font-size:13px;display:flex;align-items:center;gap:8px}
 .links{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .links a{color:#fff;background:var(--c);padding:4px 12px;border-radius:99px;text-decoration:none;font-size:13px;font-weight:600}
 .btn.sm{padding:3px 10px;font-size:12px}
+.desc{grid-column:1/-1;margin:2px 0 0;color:var(--mut);font-size:13.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}.desc.open{display:block}
 .empty{text-align:center;color:var(--mut);padding:40px}
 @media(max-width:560px){.job{grid-template-columns:1fr}.sal{text-align:left}.wrap{padding:20px 12px 48px}input,select{font-size:16px}.chip,.btn{min-height:40px}label{flex:1 1 100%;justify-content:space-between}input[type=text]{width:140px}input[type=range]{width:100%}#ftog{display:inline-block;margin-top:12px}#fbody{display:none;margin-top:4px}#fbody.open{display:block}}
 </style></head>
@@ -50,7 +51,7 @@ label{color:var(--mut);font-size:13px;display:flex;align-items:center;gap:8px}
 <div id="fbody">
 <div class="row"><label>My postcode <input type="text" id="pc" placeholder="e.g. LS1 4AP" autocomplete="postal-code"></label><button class="btn" id="setpc">Set</button><span class="meta" id="pcmsg"></span></div>
 <div class="row"><label>Within <input type="range" id="rad" min="5" max="300" step="5" value="150"> <b id="radv">150</b> mi</label>
-<label>Employer <select id="emp"></select></label><label>Min salary <select id="min"><option value="0">Any</option><option value="40000">£40k+</option><option value="60000">£60k+</option><option value="80000">£80k+</option><option value="100000">£100k+</option></select></label></div>
+<label>Employer <select id="emp"></select></label><label>Min salary <input type="range" id="min" min="0" max="100000" step="1000" value="0"> <b id="minv">Any</b></label></div>
 <div class="row" id="chips"></div>
 <div class="row" id="toggles"></div>
 </div></div>
@@ -58,7 +59,7 @@ label{color:var(--mut);font-size:13px;display:flex;align-items:center;gap:8px}
 <div class="row" style="justify-content:center;margin-top:16px"><button class="btn" id="more" hidden>Show more</button></div>
 </div>
 <script>
-const CATS={nhs:["NHS clinical","#4da3ff"],priv:["Private &amp; independent","#ff6fa8"],res:["Research","#8b7bff"],adj:["Medical-adjacent","#2dd4a7"],soc:["Social care &amp; support","#f59e0b"]};
+const CATS={nhs:["NHS clinical","#4da3ff"],priv:["Private &amp; independent","#ff6fa8"],res:["Research","#8b7bff"],adj:["Medical-adjacent","#2dd4a7"],soc:["Social care &amp; support","#f59e0b"],gen:["Other work","#94a3b8"],aes:["Aesthetics","#c084fc"]};
 const STAT=["Saved","Applied","Interview","Offer","Rejected"];
 const SRC={nhs:"NHS Jobs",reed:"Reed",jobsac:"jobs.ac.uk",employer:"Employer site",adzuna:"Adzuna"};
 const TOG=[["ft","Full time only",1],["nmw","At least minimum wage",1],["clean","Hide non-doctor &amp; other-specialty",1],["closed","Show closed &amp; stale",0],["mine","My applications only",0],["hid","Show hidden",0]];
@@ -93,7 +94,7 @@ function card(j){
  const hrs=j.hours_per_week?`${j.hours_per_week} hrs/wk`:j.full_time===true?"Full time":j.full_time===false?"Part time":"Hours not stated";
  return `<article class="job${j.status!="open"||s.hide?" dim":""}" style="--c:${c}">
  <div><div class="emp">${esc(j.employer)}</div><h3>${esc(j.title)}</h3><div class="meta">${esc(j.location||"Location not stated")}${j.dist!=null?" · "+Math.round(j.dist)+" mi":""} · ${hrs} · ${esc(j.contract_type=="unknown"?"Contract not stated":j.contract_type)}</div></div>
- <div class="sal">${pay}</div>
+ <div class="sal">${pay}</div>${j.snippet?`<p class="desc" title="Click to read more">${esc(j.snippet)}</p>`:""}
  <div class="tags"><span class="tag">${CATS[j.category]?.[0]||""}</span>${isNew?'<span class="tag new">New</span>':""}${j.status=="stale"?'<span class="tag warn">May have gone: not seen on source</span>':""}${j.status=="closed"?'<span class="tag warn">Closed</span>':""}
  ${j.closing?(dl!=null&&dl<=3&&dl>=0?`<span class="tag hot">Closes in ${dl}d</span>`:`<span class="meta">closes ${esc(j.closing)}</span>`):'<span class="meta">no closing date</span>'}
  ${j.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}${j.flags.includes("needs-nhs-experience")?'<span class="tag warn">NHS experience asked for</span>':""}</div>
@@ -102,7 +103,7 @@ function card(j){
  ${j.closing&&dl>=0?`<button class="btn sm" data-a="ics" data-i="${j.id}">📅 Remind me</button>`:""}
  <button class="btn sm" data-a="hide" data-i="${j.id}">${s.hide?"Unhide":"Hide"}</button></div></article>`}
 function render(){
- $("radv").textContent=$("rad").value;
+ $("radv").textContent=$("rad").value;$("minv").textContent=+$("min").value?"£"+(+$("min").value/1000)+"k+":"Any";
  const L=filtered();
  $("count").textContent=`${L.length} role${L.length==1?"":"s"} match`;
  $("list").innerHTML=L.length?L.slice(0,shown).map(card).join(""):'<div class="empty">Nothing matches. Try widening the radius or turning a filter off.</div>';
@@ -115,7 +116,7 @@ function ics(j){
 document.addEventListener("input",e=>{if(e.target.dataset.a)return;shown=100;render()});
 $("chips").onclick=e=>{const b=e.target.closest(".chip");if(!b)return;const c=b.dataset.k;sel.has(c)?sel.delete(c):sel.add(c);b.setAttribute("aria-pressed",sel.has(c));shown=100;render()};
 $("toggles").onclick=e=>{const b=e.target.closest(".chip");if(!b)return;const t=b.dataset.t;on[t]=!on[t];b.setAttribute("aria-pressed",on[t]);shown=100;render()};
-$("list").onclick=e=>{const b=e.target.closest("[data-a]");if(!b||b.tagName=="SELECT")return;const i=b.dataset.i,j=D.jobs.find(x=>x.id==i);
+$("list").onclick=e=>{const d=e.target.closest(".desc");if(d){d.classList.toggle("open");return}const b=e.target.closest("[data-a]");if(!b||b.tagName=="SELECT")return;const i=b.dataset.i,j=D.jobs.find(x=>x.id==i);
  if(b.dataset.a=="ics")ics(j);if(b.dataset.a=="hide"){ST[i]={...ST[i],hide:!(ST[i]||{}).hide};keep();render()}};
 $("list").onchange=e=>{const b=e.target;if(b.dataset.a!="st")return;ST[b.dataset.i]={...ST[b.dataset.i],st:b.value,at:new Date().toISOString().slice(0,10)};keep()};
 $("more").onclick=()=>{shown+=100;render()};

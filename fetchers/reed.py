@@ -1,5 +1,6 @@
 """Reed API fetcher. Needs a free API key in the REED_API_KEY secret."""
 import os
+from datetime import datetime, timezone
 
 from fetchers.common import SourceSkipped, enrich, get, make_job, parse_date, strip_html
 import config
@@ -18,12 +19,16 @@ def fetch(known):
     key = os.getenv("REED_API_KEY", "").strip()
     if not key:
         raise SourceSkipped("REED_API_KEY not set")
+    now = datetime.now(timezone.utc)
+    if not os.getenv("FORCE_FETCH") and config.REED_EVERY_HOURS > 1 and (
+            now.hour % config.REED_EVERY_HOURS or now.minute >= 30):
+        raise SourceSkipped("not Reed's turn this run (runs every few hours)")
     jobs = {}
     for words, category in config.REED_QUERIES:
         skip = 0
         while skip < config.REED_MAX_RESULTS:
             params = {"keywords": words, "locationName": config.SEARCH_POSTCODE,
-                      "distancefromlocation": config.RADIUS_MILES,
+                      "distancefromlocation": config.LOCAL_RADIUS_MILES if category in config.LOCAL_CATEGORIES else config.RADIUS_MILES,
                       "resultsToTake": 100, "resultsToSkip": skip}
             if config.REED_FULL_TIME_ONLY:
                 params["fullTime"] = "true"
