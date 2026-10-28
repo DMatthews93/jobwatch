@@ -4,6 +4,7 @@ import re
 from bs4 import BeautifulSoup, NavigableString
 
 import config
+from fetchers.flags import flag
 from fetchers.common import clean, enrich, get, infer_contract, make_job, parse_date, parse_hours
 
 SEARCH_URL = "https://www.jobs.nhs.uk/candidate/search/results"
@@ -40,6 +41,8 @@ def _parse_card(card):
         snippet=_text(card, "div.nhsuk-u-margin-bottom-4")[:400],
         salary_text=_text(card, "li[data-test='search-result-salary'] strong"),
     )
+    if any(p in employer.lower() for p in config.PRIVATE_PROVIDERS):
+        job["category"] = "priv"
     return job
 
 
@@ -58,12 +61,15 @@ def _detail(url):
 
 def fetch(known):
     jobs = {}
-    for kw in config.NHS_KEYWORDS:
+    searches = [(kw, True) for kw in config.NHS_KEYWORDS] + [(kw, False) for kw in config.NHS_EXTRA_KEYWORDS]
+    for kw, narrow in searches:
         for page in range(1, config.NHS_MAX_PAGES + 1):
             params = {"keyword": kw, "location": config.SEARCH_POSTCODE,
                       "skipPhraseSuggester": "true", "distance": config.RADIUS_MILES,
-                      "staffGroup": config.NHS_STAFF_GROUP,
-                      "payBand": ",".join(config.NHS_PAY_BANDS), "language": "en", "page": page}
+                      "language": "en", "page": page}
+            if narrow:
+                params["staffGroup"] = config.NHS_STAFF_GROUP
+                params["payBand"] = ",".join(config.NHS_PAY_BANDS)
             r = get(SEARCH_URL, params=params)
             if not r:
                 break
@@ -89,6 +95,9 @@ def fetch(known):
                 if prev.get(f) is not None:
                     job[f] = prev[f]
             continue
+        flag(job)
+        if {"non-doctor-role", "other-specialty"} & set(job["flags"]):
+            continue  # don't spend a page fetch on roles the site hides by default
         if fetched >= config.MAX_DETAIL_PER_RUN:
             continue
         fetched += 1

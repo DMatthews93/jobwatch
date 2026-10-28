@@ -44,7 +44,7 @@ def main():
         for s in {l["source"] for l in p.get("links", [])}:
             prev_count[s] = prev_count.get(s, 0) + 1
 
-    results, ok, failed = [], [], set()
+    results, ok, failed, errors = [], [], set(), set()
     for name, module in FETCHERS:
         print(f"[{name}]")
         try:
@@ -57,10 +57,12 @@ def main():
             print(f"  ! {name} failed:")
             traceback.print_exc(limit=2)
             failed.add(name)
+            errors.add(name)
             continue
         if not jobs and prev_count.get(name, 0) > 10:
             print(f"  ! {name} returned nothing but had {prev_count[name]} jobs before: treating as a failed run")
             failed.add(name)
+            errors.add(name)
             continue
         ok.append(name)
         results.extend(jobs)
@@ -78,7 +80,7 @@ def main():
         "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "settings": {"nlw_hourly": config.NLW_HOURLY, "full_time_hours": config.FULL_TIME_HOURS,
                      "nlw_full_time_annual": nlw_annual},
-        "sources": {"ok": ok, "not_updated": sorted(failed)},
+        "sources": {"ok": ok, "not_updated": sorted(errors)},
         "jobs": final,
     }
     os.makedirs("site", exist_ok=True)

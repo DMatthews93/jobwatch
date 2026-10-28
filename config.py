@@ -29,6 +29,13 @@ NHS_KEYWORDS = [
 NHS_STAFF_GROUP = "MEDICAL_AND_DENTAL"
 NHS_PAY_BANDS = ["SPECIALTY_DOCTOR", "FOUNDATION_DOCTOR", "SPECIALTY_REGISTRAR",
                  "DOCTOR_OTHER", "SPECIALIST"]
+# Extra searches WITHOUT the staff-group / pay-band filters. Independent providers such as BPAS and
+# MSI advertise on NHS Jobs with pay scheme "Other", so the filters above could hide their roles.
+# Nurses/midwives that come back are labelled "non-doctor-role" and hidden on the site by default.
+NHS_EXTRA_KEYWORDS = ["BPAS", "MSI Reproductive Choices", "abortion", "termination of pregnancy",
+                      "sexual and reproductive health", "contraception"]
+# NHS Jobs employers that should show under "Private & independent" instead of "NHS clinical"
+PRIVATE_PROVIDERS = ["bpas", "british pregnancy advisory", "msi reproductive", "marie stopes"]
 
 # --- Reed (needs REED_API_KEY). (search words, category) ---------------------
 # categories: nhs, priv (private/independent), res (research), adj (medical-adjacent), soc (social care)
@@ -50,16 +57,26 @@ REED_FULL_TIME_ONLY = True
 REED_MAX_RESULTS = 300    # per query
 
 # --- jobs.ac.uk RSS feeds: (feed URL, category) -------------------------------
-# UNVERIFIED GUESS: on a jobs.ac.uk search page, click the RSS icon, copy the link, paste it here.
-JOBSAC_FEEDS = [
-    ("https://www.jobs.ac.uk/jobs/clinical-medicine/?format=rss", "res"),
-]
+# Leave empty to skip. To fill in: open https://www.jobs.ac.uk/feeds, find the subject you want
+# (e.g. medicine / health), right-click its "RSS Feed" link, copy the link address, and add it:
+# JOBSAC_FEEDS = [("PASTE-THE-LINK-HERE", "res")]
+JOBSAC_FEEDS = []
+# Subject feeds are broad, so only jobs whose title/summary mention one of these words are kept.
+JOBSAC_KEYWORDS = (r"obstetric|gynaecolog|women'?s health|maternal|maternity|reproductive|fertility|"
+                   r"pregnan|midwi|abortion|contracepti|clinical research|clinical trial")
 
 # --- Employer careers pages --------------------------------------------------
-# Add one entry per employer. Example (fill in the real URL after checking the site):
-# {"name": "BPAS", "url": "https://example.org/careers", "category": "priv",
-#  "link_contains": "/job", "title_regex": r"doctor|clinician|medical|nurse|support|care"}
-EMPLOYER_SOURCES = []
+# BPAS has no vacancies page of its own (it advertises on NHS Jobs), so it is covered above.
+# MSI has its own recruitment site as well as NHS Jobs. Duplicates are merged automatically.
+# NOT YET CHECKED against a live vacancy list (when I looked it said "no vacancies"): if the log
+# shows "0 links" while jobs are listed, link_contains / title_regex need adjusting.
+EMPLOYER_SOURCES = [
+    {"name": "MSI Reproductive Choices",
+     "url": "https://careers.msichoices.org/Search.aspx?l=uk",
+     "category": "priv",
+     "link_contains": "VacancyInformation",
+     "title_regex": r"doctor|surgeon|practitioner|clinician|medical|gynae|obstet|abortion|contracepti|sexual|reproductive"},
+]
 
 # --- Adzuna (PAID, switched off unless ENABLE_ADZUNA=true plus keys) ----------
 ADZUNA_EVERY_HOURS = 3

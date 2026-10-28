@@ -31,6 +31,8 @@ def fetch(known):
             desc = strip_html(item.findtext("description") or "")
             if not link or link in jobs:
                 continue
+            if not re.search(config.JOBSAC_KEYWORDS, f"{title} {desc}", re.I):
+                continue
             stops = ["Location:", "Salary:", "Employer:", "Closes:", "Closing"]
             employer = _after("Employer", desc, stops)
             if not employer and "," in title:
