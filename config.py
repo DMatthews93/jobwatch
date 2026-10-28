@@ -140,7 +140,7 @@ EMPLOYER_SOURCES = [
      "list_url_regex": r"/_server-islands/VacanciesList\?[^\"']+",
      "category": "gen",
      "link_contains": "/careers/",
-     "title_regex": r"customer|support|service|admin|assistant|advis|agent|complaint|receptionist",
+     "title_regex": r"customer|support|service|admin|assistant|advis|agent|complaint|receptionist|secretar",
      "detail": True,
      "location": "Newcastle upon Tyne"},
 ]
