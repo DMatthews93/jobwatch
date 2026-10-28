@@ -20,11 +20,20 @@ _session.headers["User-Agent"] = config.USER_AGENT
 
 def get(url, retries=3, **kw):
     """GET with retries. Never logs the query string (it can contain the postcode)."""
+    return _request("GET", url, retries, **kw)
+
+
+def post(url, retries=3, **kw):
+    """POST with the same retries and logging as get()."""
+    return _request("POST", url, retries, **kw)
+
+
+def _request(method, url, retries, **kw):
     kw.setdefault("timeout", 30)
     shown = url.split("?")[0]
     for attempt in range(retries):
         try:
-            r = _session.get(url, **kw)
+            r = _session.request(method, url, **kw)
         except requests.RequestException as e:
             print(f"  ! request error for {shown}: {type(e).__name__}")
             time.sleep(2 ** (attempt + 1))
