@@ -64,7 +64,7 @@ label{color:var(--mut);font-size:13px;display:flex;align-items:center;gap:8px}
 const CATS={nhs:["NHS clinical","#4da3ff"],priv:["Private &amp; independent","#ff6fa8"],res:["Research","#8b7bff"],adj:["Medical-adjacent","#2dd4a7"],soc:["Social care &amp; support","#f59e0b"],gen:["Other work","#94a3b8"],aes:["Aesthetics","#c084fc"]};
 const STAT=["Saved","Applied","Interview","Offer","Rejected"];
 const SRC={nhs:"NHS Jobs",reed:"Reed",jobsac:"jobs.ac.uk",employer:"Employer site",adzuna:"Adzuna"};
-const TOG=[["ft","Full time only",1],["nmw","At least minimum wage",1],["clean","Hide non-doctor &amp; other-specialty",1],["closed","Show closed &amp; stale",0],["mine","My applications only",0],["hid","Show hidden",0]];
+const TOG=[["inside","Pay fully inside salary range",1],["ft","Full time only",1],["nmw","At least minimum wage",1],["clean","Hide non-doctor &amp; other-specialty",1],["closed","Show closed &amp; stale",0],["mine","My applications only",0],["hid","Show hidden",0]];
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let D={jobs:[],settings:{nlw_full_time_annual:24785}},ST={},HOME=null,shown=100;
@@ -79,12 +79,18 @@ const sel=new Set(Object.keys(CATS));
 $("chips").innerHTML=Object.entries(CATS).map(([c,[n,col]])=>`<button class="chip" data-k="${c}" style="--c:${col}" aria-pressed="true">${n}</button>`).join("");
 $("toggles").innerHTML=TOG.map(t=>`<button class="chip" data-t="${t[0]}" aria-pressed="${!!t[2]}">${t[1]}</button>`).join("");
 if(HOME){$("pc").value=HOME.pc;$("pcmsg").textContent="✓ location set"}
+// Slider ends (0 and 100k) mean no limit. "inside": whole pay range within the slider; off: any overlap.
+function payOk(j,mn,mx){
+ if(mn===0&&mx>=1e5)return true;
+ if(!j.salary_stated)return false;
+ const lo=j.salary_min??j.salary_max??0,hi=j.salary_max??j.salary_min??0;
+ return on.inside?(mn===0||lo>=mn)&&(mx>=1e5||hi<=mx):hi>=mn&&lo<=mx}
 function filtered(){
  const q=$("q").value.toLowerCase(),R=+$("rad").value,mn=Math.min(+$("min").value,+$("max").value),mx=Math.max(+$("min").value,+$("max").value),E=$("emp").value,fl=D.settings.nlw_full_time_annual;
  let L=D.jobs.map(j=>({...j,dist:HOME&&j.lat!=null?mi(HOME.lat,HOME.lng,j.lat,j.lng):null})).filter(j=>{
   const s=ST[j.id]||{};
   return sel.has(j.category)&&(E===""||j.employer===E)&&(!HOME||j.dist==null||j.dist<=R)&&
-   ((mn===0&&mx>=1e5)||(j.salary_stated&&(j.salary_max||0)>=mn&&(j.salary_min||0)<=mx))&&(!on.ft||j.full_time!==false)&&(!on.nmw||!j.salary_stated||j.salary_estimated||j.salary_min>=fl)&&
+   payOk(j,mn,mx)&&(!on.ft||j.full_time!==false)&&(!on.nmw||!j.salary_stated||j.salary_estimated||j.salary_min>=fl)&&
    (!on.clean||!j.flags.some(f=>f=="non-doctor-role"||f=="other-specialty"))&&(on.closed||j.status=="open")&&
    (!on.mine||s.st)&&(on.hid||!s.hide)&&`${j.title} ${j.employer} ${j.location}`.toLowerCase().includes(q)});
  const so=$("sort").value,t=x=>Date.parse(x.first_seen);
