@@ -299,6 +299,12 @@ label {
   font-size: 13px;
   font-weight: 600;
 }
+/* Track dropdown: same pill shape as the buttons beside it, not the big filter inputs */
+.links select {
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 12px;
+}
 .btn.sm {
   padding: 3px 10px;
   font-size: 12px;
@@ -396,8 +402,13 @@ label {
     font-size: 16px;
   }
   .chip,
-  .btn {
+  .btn,
+  .links select {
     min-height: 40px;
+  }
+  /* 16px stops iPhones zooming in when the Track dropdown is tapped */
+  .links select {
+    font-size: 16px;
   }
   label {
     flex: 1 1 100%;
