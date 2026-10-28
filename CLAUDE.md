@@ -9,7 +9,9 @@ care work, admin, customer support and aesthetics). GitHub Actions runs every
 - `config.py` holds all settings; `build.py`, `merge.py`, `state.py`, `geo.py`
 - `fetchers/`: nhs, reed, jobsac, employers, adzuna, common, flags
 - `tests/`: unit tests (`python -m pytest`)
-- `site/index.html`: the whole front end (HTML, CSS and JS in one file)
+- `site/`: front end — `index.html` (markup), `style.css`, `app.js`. When
+  `style.css` or `app.js` changes, bump the `?v=` number on both links in
+  `index.html` so browsers drop cached copies.
 - `.github/workflows/update.yml`
 
 ## Rules
