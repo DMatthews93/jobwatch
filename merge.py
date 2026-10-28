@@ -3,7 +3,7 @@ import re
 from datetime import date
 from difflib import SequenceMatcher
 
-PRIORITY = {"nhs": 0, "employer": 1, "reed": 2, "jobsac": 3, "adzuna": 4}
+PRIORITY = {"nhs": 0, "employer": 1, "hospital": 1, "bmj": 2, "reed": 3, "jobsac": 4, "adzuna": 5}
 _STOP = {"the", "of", "and", "nhs", "foundation", "trust", "ft", "ltd", "limited", "plc", "uk", "group"}
 
 

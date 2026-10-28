@@ -90,6 +90,39 @@ JOBSAC_FEEDS = []
 JOBSAC_KEYWORDS = (r"obstetric|gynaecolog|women'?s health|maternal|maternity|reproductive|fertility|"
                    r"pregnan|midwi|abortion|contracepti|clinical research|clinical trial")
 
+# --- BMJ Careers RSS feeds (UK only): (profession id, category) -----------------
+# To add a specialty: open bmj.com/careers/jobs/<specialty>/united-kingdom/ and copy the
+# Profession=... number from the page's RSS link. Category "nhs" means "NHS unless the employer
+# isn't an NHS body", in which case the job goes under "Private & independent".
+BMJ_FEEDS = [
+    (2546404, "nhs"),  # Obstetrics and gynaecology
+    (2546426, "nhs"),  # Sexual and reproductive health
+    (2546411, "adj"),  # Pharmaceutical medicine
+]
+BMJ_DELAY = 7             # seconds between requests: bmj.com's robots.txt asks for a 7s crawl delay
+BMJ_MAX_DETAIL = 8        # new advert pages read per run (hours, contract type, postcode)
+
+# --- Private hospital groups (their careers sites' own public job feeds) -----------
+# Circle Health (robots.txt blocks all bots), HCA UK (bot protection) and Nuffield Health (needs a
+# key taken from its page) are deliberately not included.
+HOSPITAL_SOURCES = [
+    {"name": "Spire Healthcare", "type": "oracle", "host": "https://elij.fa.em2.oraclecloud.com", "site": "CX"},
+    {"name": "Ramsay Health Care UK", "type": "workday", "host": "https://ramsayhealthcare.wd3.myworkdayjobs.com",
+     "tenant": "ramsayhealthcare", "site": "Ramsay_Careers"},
+]
+# Hospital groups list every role (nurses, porters, physios...). Titles matching HOSPITAL_EXCLUDE are
+# skipped; of the rest, only titles matching one of HOSPITAL_ROLES are kept, checked in order.
+# soc/gen roles are kept within LOCAL_RADIUS_MILES, others within RADIUS_MILES.
+HOSPITAL_EXCLUDE = r"physio|nurse|nursing sister|midwi|therapist|radiograph|pharmac|sonograph|dietit|optom"
+HOSPITAL_ROLES = [
+    ("aes", r"\baesthetic|\bcosmetic|\binjector"),  # \b so "anaesthetics" doesn't match
+    ("priv", r"\bdoctor\b|\brmo\b|resident medical|medical officer|physician|gynae|obstet|"
+             r"women'?s health|fertility|colposcop|\bgp\b"),
+    ("soc", r"health ?care assistant|\bhca\b|care assistant|nursing assistant|support worker"),
+    ("gen", r"reception|administrator|\badmin\b|patient services|customer service|ward clerk|"
+            r"secretary|booking|cashier"),
+]
+
 # --- Employer careers pages --------------------------------------------------
 # BPAS has no vacancies page of its own (it advertises on NHS Jobs), so it is covered above.
 # MSI has its own recruitment site as well as NHS Jobs. Duplicates are merged automatically.

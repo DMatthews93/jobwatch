@@ -11,7 +11,7 @@ const CATS = {
   aes: ["Aesthetics", "#c084fc"],
 };
 const STAT = ["Saved", "Applied", "Interview", "Offer", "Rejected"];
-const SRC = { nhs: "NHS Jobs", reed: "Reed", jobsac: "jobs.ac.uk", employer: "Employer site", adzuna: "Adzuna" };
+const SRC = { nhs: "NHS Jobs", bmj: "BMJ Careers", reed: "Reed", jobsac: "jobs.ac.uk", employer: "Employer site", hospital: "Employer site", adzuna: "Adzuna" };
 // Toggle buttons: [key, label, on by default]
 const TOG = [
   ["inside", "Pay fully inside salary range", 1],

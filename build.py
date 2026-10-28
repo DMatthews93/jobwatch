@@ -8,12 +8,13 @@ from datetime import datetime, timezone
 import config
 import geo
 import state
-from fetchers import adzuna, employers, jobsac, nhs, reed
+from fetchers import adzuna, bmj, employers, hospitals, jobsac, nhs, reed
 from fetchers.common import SourceSkipped
 from fetchers.flags import flag
 from merge import merge
 
-FETCHERS = [("nhs", nhs), ("reed", reed), ("jobsac", jobsac), ("employer", employers), ("adzuna", adzuna)]
+FETCHERS = [("nhs", nhs), ("bmj", bmj), ("reed", reed), ("jobsac", jobsac), ("employer", employers),
+            ("hospital", hospitals), ("adzuna", adzuna)]
 STATE_FILE = os.path.join("data", "state.json")
 OUT_FILE = os.path.join("site", "jobs.json")
 
