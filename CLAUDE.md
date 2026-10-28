@@ -44,8 +44,8 @@ care work, admin, customer support and aesthetics). GitHub Actions runs every
 
 ## Open work
 1. Live scrapers have never been run against the real sites: check NHS
-   selectors, Reed field names and the MSI careers page.
-2. Atom Bank vacancies load via JavaScript; look for a JSON endpoint.
-3. Add Community Integrative Care and other employers to `EMPLOYER_SOURCES`
+   selectors, Reed field names and the MSI careers page (careers.msichoices.org now
+   fails with a certificate hostname mismatch; it has probably moved).
+2. Add Community Integrative Care and other employers to `EMPLOYER_SOURCES`
    once vacancy page URLs are supplied.
-4. Later: sync the application tracker across devices (currently localStorage).
+3. Later: sync the application tracker across devices (currently localStorage).

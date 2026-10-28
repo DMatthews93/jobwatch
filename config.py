@@ -134,6 +134,15 @@ EMPLOYER_SOURCES = [
      "category": "priv",
      "link_contains": "VacancyInformation",
      "title_regex": r"doctor|surgeon|practitioner|clinician|medical|gynae|obstet|abortion|contracepti|sexual|reproductive"},
+    # Atom bank lists vacancies in a fragment the careers page loads separately; robots.txt allows it.
+    {"name": "Atom bank",
+     "url": "https://www.atombank.co.uk/careers/",
+     "list_url_regex": r"/_server-islands/VacanciesList\?[^\"']+",
+     "category": "gen",
+     "link_contains": "/careers/",
+     "title_regex": r"customer|support|service|admin|assistant|advis|agent|complaint|receptionist",
+     "detail": True,
+     "location": "Durham"},
 ]
 
 # --- Adzuna (PAID, switched off unless ENABLE_ADZUNA=true plus keys) ----------
