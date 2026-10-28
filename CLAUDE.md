@@ -7,8 +7,8 @@ care work, admin, customer support and aesthetics). GitHub Actions runs every
 
 ## Layout
 - `config.py` holds all settings; `build.py`, `merge.py`, `state.py`, `geo.py`
-- `fetchers/`: nhs, reed, jobsac, employers, adzuna, common, flags
-- `tests/`: unit tests (`python -m pytest`)
+- `fetchers/`: nhs, bmj, reed, jobsac, employers, hospitals, adzuna, common, flags
+- `tests/`: unit tests (`python -m unittest discover -s tests -t .`, as the workflow runs them)
 - `site/`: front end — `index.html` (markup), `style.css`, `app.js`. When
   `style.css` or `app.js` changes, bump the `?v=` number on both links in
   `index.html` so browsers drop cached copies.
@@ -22,6 +22,12 @@ care work, admin, customer support and aesthetics). GitHub Actions runs every
 - No Discord. "New" = `first_seen` within 24h.
 
 ## Decisions
+- BMJ Careers: official RSS feeds (`BMJ_FEEDS`); bmj.com asks for a 7s crawl delay.
+- Hospital groups: Spire (Oracle) and Ramsay (Workday) public job feeds, filtered by
+  `HOSPITAL_ROLES`; care/admin roles kept only if known to be within 25 miles.
+- Not used, on purpose: DWP Find a Job (old site closed; the new jobs.service.gov.uk blocks bots),
+  Circle Health (robots.txt disallows), HCA UK (bot protection), Nuffield (needs a key lifted
+  from its page). Don't bypass bot protection or robots.txt.
 - Adzuna fetcher exists but is OFF (paid). jobs.ac.uk has no official RSS, so
   `JOBSAC_FEEDS` stays empty unless a feed URL is supplied.
 - Jobs are flagged (`non-doctor-role`, `other-specialty`,

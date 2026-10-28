@@ -4,7 +4,8 @@ A standalone job-search website. A GitHub Action runs every 30 minutes, collects
 sources, merges duplicates, remembers what it has seen, and publishes `jobs.json` plus the site on
 GitHub Pages.
 
-Sources: NHS Jobs (scraped), Reed (API), jobs.ac.uk (RSS), employer careers pages (you add them in
+Sources: NHS Jobs (scraped), BMJ Careers (RSS), Reed (API), jobs.ac.uk (RSS), Spire and Ramsay
+private hospitals (their careers sites' job feeds), employer careers pages (you add them in
 `config.py`), and Adzuna (paid, off by default).
 
 ## One-time setup
