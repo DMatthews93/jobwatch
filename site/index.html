@@ -40,8 +40,9 @@ label{color:var(--mut);font-size:13px;display:flex;align-items:center;gap:8px}
 .links a{color:#fff;background:var(--c);padding:4px 12px;border-radius:99px;text-decoration:none;font-size:13px;font-weight:600}
 .btn.sm{padding:3px 10px;font-size:12px}
 .desc{grid-column:1/-1;margin:2px 0 0;color:var(--mut);font-size:13.5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}.desc.open{display:block}
+.dual{position:relative;width:200px;height:22px;display:inline-block}.dual input{position:absolute;left:0;top:0;width:100%;height:22px;margin:0;background:none;pointer-events:none;-webkit-appearance:none;appearance:none}.dual input::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:var(--bd)}.dual input::-moz-range-track{height:4px;border-radius:2px;background:var(--bd)}.dual input:last-child::-webkit-slider-runnable-track{background:transparent}.dual input:last-child::-moz-range-track{background:transparent}.dual input::-webkit-slider-thumb{pointer-events:auto;-webkit-appearance:none;width:18px;height:18px;margin-top:-7px;border-radius:50%;background:#6aa6ff;border:2px solid #fff;cursor:pointer}.dual input::-moz-range-thumb{pointer-events:auto;width:14px;height:14px;border-radius:50%;background:#6aa6ff;border:2px solid #fff;cursor:pointer}
 .empty{text-align:center;color:var(--mut);padding:40px}
-@media(max-width:560px){.job{grid-template-columns:1fr}.sal{text-align:left}.wrap{padding:20px 12px 48px}input,select{font-size:16px}.chip,.btn{min-height:40px}label{flex:1 1 100%;justify-content:space-between}input[type=text]{width:140px}input[type=range]{width:100%}#ftog{display:inline-block;margin-top:12px}#fbody{display:none;margin-top:4px}#fbody.open{display:block}}
+@media(max-width:560px){.job{grid-template-columns:1fr}.sal{text-align:left}.wrap{padding:20px 12px 48px}input,select{font-size:16px}.chip,.btn{min-height:40px}label{flex:1 1 100%;justify-content:space-between}input[type=text]{width:140px}input[type=range]{width:100%}.dual{flex:1;max-width:260px}#ftog{display:inline-block;margin-top:12px}#fbody{display:none;margin-top:4px}#fbody.open{display:block}}
 </style></head>
 <body><div class="wrap">
 <header><div><h1>Jobwatch</h1><p class="sub" id="upd">Loading…</p></div><button class="chip" id="theme">◐ Theme</button></header>
@@ -51,7 +52,7 @@ label{color:var(--mut);font-size:13px;display:flex;align-items:center;gap:8px}
 <div id="fbody">
 <div class="row"><label>My postcode <input type="text" id="pc" placeholder="e.g. LS1 4AP" autocomplete="postal-code"></label><button class="btn" id="setpc">Set</button><span class="meta" id="pcmsg"></span></div>
 <div class="row"><label>Within <input type="range" id="rad" min="5" max="300" step="5" value="150"> <b id="radv">150</b> mi</label>
-<label>Employer <select id="emp"></select></label><label>Min salary <input type="range" id="min" min="0" max="100000" step="1000" value="0"> <b id="minv">Any</b></label></div>
+<label>Employer <select id="emp"></select></label><label>Salary <span class="dual"><input type="range" id="min" min="0" max="100000" step="1000" value="0" aria-label="Minimum salary"><input type="range" id="max" min="0" max="100000" step="1000" value="100000" aria-label="Maximum salary"></span> <b id="minv">Any</b></label></div>
 <div class="row" id="chips"></div>
 <div class="row" id="toggles"></div>
 </div></div>
@@ -78,11 +79,11 @@ $("chips").innerHTML=Object.entries(CATS).map(([c,[n,col]])=>`<button class="chi
 $("toggles").innerHTML=TOG.map(t=>`<button class="chip" data-t="${t[0]}" aria-pressed="${!!t[2]}">${t[1]}</button>`).join("");
 if(HOME){$("pc").value=HOME.pc;$("pcmsg").textContent="✓ location set"}
 function filtered(){
- const q=$("q").value.toLowerCase(),R=+$("rad").value,mn=+$("min").value,E=$("emp").value,fl=D.settings.nlw_full_time_annual;
+ const q=$("q").value.toLowerCase(),R=+$("rad").value,mn=Math.min(+$("min").value,+$("max").value),mx=Math.max(+$("min").value,+$("max").value),E=$("emp").value,fl=D.settings.nlw_full_time_annual;
  let L=D.jobs.map(j=>({...j,dist:HOME&&j.lat!=null?mi(HOME.lat,HOME.lng,j.lat,j.lng):null})).filter(j=>{
   const s=ST[j.id]||{};
   return sel.has(j.category)&&(E===""||j.employer===E)&&(!HOME||j.dist==null||j.dist<=R)&&
-   (mn===0||(j.salary_max||0)>=mn)&&(!on.ft||j.full_time!==false)&&(!on.nmw||!j.salary_stated||j.salary_estimated||j.salary_min>=fl)&&
+   ((mn===0&&mx>=1e5)||(j.salary_stated&&(j.salary_max||0)>=mn&&(j.salary_min||0)<=mx))&&(!on.ft||j.full_time!==false)&&(!on.nmw||!j.salary_stated||j.salary_estimated||j.salary_min>=fl)&&
    (!on.clean||!j.flags.some(f=>f=="non-doctor-role"||f=="other-specialty"))&&(on.closed||j.status=="open")&&
    (!on.mine||s.st)&&(on.hid||!s.hide)&&`${j.title} ${j.employer} ${j.location}`.toLowerCase().includes(q)});
  const so=$("sort").value,t=x=>Date.parse(x.first_seen);
@@ -103,7 +104,7 @@ function card(j){
  ${j.closing&&dl>=0?`<button class="btn sm" data-a="ics" data-i="${j.id}">📅 Remind me</button>`:""}
  <button class="btn sm" data-a="hide" data-i="${j.id}">${s.hide?"Unhide":"Hide"}</button></div></article>`}
 function render(){
- $("radv").textContent=$("rad").value;$("minv").textContent=+$("min").value?"£"+(+$("min").value/1000)+"k+":"Any";
+ $("radv").textContent=$("rad").value;{const lo=Math.min(+$("min").value,+$("max").value),hi=Math.max(+$("min").value,+$("max").value);$("minv").textContent=lo==0&&hi>=1e5?"Any":lo==0?"up to £"+hi/1000+"k":hi>=1e5?"£"+lo/1000+"k+":"£"+lo/1000+"k – £"+hi/1000+"k"}
  const L=filtered();
  $("count").textContent=`${L.length} role${L.length==1?"":"s"} match`;
  $("list").innerHTML=L.length?L.slice(0,shown).map(card).join(""):'<div class="empty">Nothing matches. Try widening the radius or turning a filter off.</div>';
