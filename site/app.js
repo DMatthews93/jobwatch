@@ -18,6 +18,7 @@ const TOG = [
   ["ft", "Full time only", 1],
   ["nmw", "At least minimum wage", 1],
   ["clean", "Hide non-doctor &amp; other-specialty", 1],
+  ["unk", "Include unknown locations", 0],
   ["closed", "Show closed &amp; stale", 0],
   ["mine", "My applications only", 0],
   ["hid", "Show hidden", 0],
@@ -88,7 +89,7 @@ function filtered() {
       const s = ST[j.id] || {};
       return sel.has(j.category)
         && (E === "" || j.employer === E)
-        && (!HOME || j.dist == null || j.dist <= R)
+        && (!HOME || (j.dist == null ? on.unk : j.dist <= R))  // unknown distance can't be "within R"
         && payOk(j, mn, mx)
         && (!on.ft || j.full_time !== false)
         && (!on.nmw || !j.salary_stated || j.salary_estimated || j.salary_min >= fl)
