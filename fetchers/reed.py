@@ -1,8 +1,10 @@
 """Reed API fetcher. Needs a free API key in the REED_API_KEY secret."""
 import os
+import re
 from datetime import datetime, timezone
 
-from fetchers.common import SourceSkipped, enrich, get, make_job, parse_date, strip_html
+import geo
+from fetchers.common import SourceSkipped, clean, enrich, get, make_job, parse_date, strip_html
 import config
 
 API = "https://www.reed.co.uk/api/1.0/search"
@@ -54,4 +56,31 @@ def fetch(known):
                 break
             skip += 100
         print(f"  reed: '{words}' -> {len(jobs)} jobs so far")
+    _use_stated_locations(list(jobs.values()))
     return list(jobs.values())
+
+
+_STATED = re.compile(r"\bLocation\s*:\s*(.{2,60}?)(?=\s+(?:Pay|Salary|Rate|Shift|Hours|Job Type|Contract|"
+                     r"Working|Start|Closing|Duration)\b|[.;|(\n]|$)", re.I)
+
+
+def stated_location(text):
+    """'... Location: Orkney Pay: 18 per hour ...' -> 'Orkney'."""
+    m = _STATED.search(text or "")
+    return clean(m.group(1)) if m else ""
+
+
+def _use_stated_locations(jobs):
+    """Reed's location is sometimes the recruiter's office (NE1 for a job in Orkney). When the advert
+    states a location that is found and is far from Reed's, trust the advert."""
+    pairs = [(j, {"location": s, "lat": None, "lng": None}) for j in jobs if (s := stated_location(j["snippet"]))]
+    if not pairs:
+        return
+    geo.geocode([j for j, _ in pairs] + [s for _, s in pairs])
+    moved = 0
+    for j, s in pairs:
+        if j["lat"] is not None and s["lat"] is not None and \
+                geo.miles((j["lat"], j["lng"]), (s["lat"], s["lng"])) > config.STATED_LOCATION_MILES:
+            j["location"], j["lat"], j["lng"] = s["location"], s["lat"], s["lng"]
+            moved += 1
+    print(f"  reed: {moved} jobs moved to the location stated in the advert")

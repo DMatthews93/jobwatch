@@ -80,6 +80,9 @@ LOCAL_CATEGORIES = ("soc", "gen")
 REED_EVERY_HOURS = 2
 REED_FULL_TIME_ONLY = True
 REED_MAX_RESULTS = 300    # per query
+# Reed's location can be the recruiter's office. If the advert text says "Location: X" and X is
+# more than this far from Reed's location, X is used instead.
+STATED_LOCATION_MILES = 30
 
 # --- jobs.ac.uk RSS feeds: (feed URL, category) -------------------------------
 # Leave empty to skip. To fill in: open https://www.jobs.ac.uk/feeds, find the subject you want
