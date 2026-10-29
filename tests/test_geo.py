@@ -9,8 +9,8 @@ def place(name, kind, lat=1.0):
 
 class PlaceTests(unittest.TestCase):
     def test_city_centre_dropped(self):
-        self.assertEqual(geo._place_key("Newcastle City Centre"), "p2:newcastle")
-        self.assertEqual(geo._place_key("Leeds Town Centre, West Yorkshire"), "p2:leeds")
+        self.assertEqual(geo._place_key("Newcastle City Centre"), "p3:newcastle")
+        self.assertEqual(geo._place_key("Leeds Town Centre, West Yorkshire"), "p3:leeds")
 
     def test_prefers_city_over_same_named_suburb(self):
         results = [place("Newcastle", "Suburban Area", 56.0), place("Newcastle Emlyn", "Town", 52.0),
@@ -27,6 +27,13 @@ class PlaceTests(unittest.TestCase):
 
     def test_ignores_names_that_only_contain_the_query(self):
         self.assertIsNone(geo.best_place("leeds", [place("New Leeds", "Village")]))
+
+    def test_hyphenated_town(self):
+        results = [place("Thornaby-on-Tees", "Town", 54.53)]
+        self.assertEqual(geo.best_place("thornaby", results)["latitude"], 54.53)
+
+    def test_postcode_not_part_of_place_name(self):
+        self.assertEqual(geo._place_key("Douglas IM1 4BR"), "p3:douglas")
 
 
 if __name__ == "__main__":

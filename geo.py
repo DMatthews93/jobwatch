@@ -19,8 +19,8 @@ def _load():
             cache = json.load(f)
     except (OSError, ValueError):
         return {}
-    # "pl:" entries came from the old first-result lookup (e.g. Sunderland -> a hamlet): redo them
-    return {k: v for k, v in cache.items() if not k.startswith("pl:")}
+    # Place results from older matching rules (pl:, p2:) are redone, e.g. Sunderland was a hamlet
+    return {k: v for k, v in cache.items() if k.startswith(("pc:", "p3:"))}
 
 
 def _save(cache):
@@ -36,9 +36,10 @@ def _postcode_key(location):
 
 def _place_key(location):
     for part in (location or "").split(","):
-        p = re.sub(r"\s+(city|town)\s+centre$|\s+centre$", "", part.strip().lower())
+        p = POSTCODE.sub("", part).strip().lower()
+        p = re.sub(r"\s+(city|town)\s+centre$|\s+centre$", "", p)
         if len(p) > 2 and p not in SKIP_PLACES:
-            return f"p2:{p}"
+            return f"p3:{p}"
     return None
 
 
@@ -50,7 +51,7 @@ def best_place(query, results):
     with the query ("Newcastle" -> Newcastle upon Tyne, not the Fife suburb that comes first)."""
     q = query.lower()
     named = [r for r in results if r.get("latitude") is not None and
-             ((r.get("name_1") or "").lower() == q or (r.get("name_1") or "").lower().startswith(q + " "))]
+             ((r.get("name_1") or "").lower() == q or (r.get("name_1") or "").lower().startswith((q + " ", q + "-")))]
     if not named:
         return None
     return min(named, key=lambda r: (_PLACE_RANK.get(r.get("local_type"), 2), (r.get("name_1") or "").lower() != q))
@@ -69,6 +70,23 @@ def _bulk_postcodes(keys, cache):
             print("  ! postcode lookup failed for a batch")
 
 
+def _retired_postcode(key, cache):
+    """A postcode that isn't current (e.g. M23 9TL, retired in 2000 but still on adverts): try the
+    retired-postcode list, then the postcode district (M23). Stores False when neither is known."""
+    pc = key[3:]
+    urls = ("https://api.postcodes.io/terminated_postcodes/" + requests.utils.quote(pc),
+            "https://api.postcodes.io/outcodes/" + requests.utils.quote(pc.split()[0]))
+    for url in urls:
+        try:
+            res = requests.get(url, timeout=20).json().get("result") or {}
+        except (requests.RequestException, ValueError):
+            return  # leave as is so it is retried next run
+        if res.get("latitude") is not None:
+            cache[key] = [res["latitude"], res["longitude"]]
+            return
+    cache[key] = False
+
+
 def _place(key, cache):
     try:
         r = requests.get("https://api.postcodes.io/places", params={"q": key[3:], "limit": 20}, timeout=20)
@@ -84,10 +102,15 @@ def geocode(jobs):
     pcs = {k for j in todo if (k := _postcode_key(j["location"])) and k not in cache}
     if pcs:
         _bulk_postcodes(sorted(pcs), cache)
-    places = {k for j in todo if not _postcode_key(j["location"]) and (k := _place_key(j["location"])) and k not in cache}
+    # None = not current; False = retired list and district tried too, nothing found
+    for k in sorted({k for j in todo if (k := _postcode_key(j["location"])) and cache.get(k) is None}):
+        _retired_postcode(k, cache)
+    places = {k for j in todo if cache.get(_postcode_key(j["location"]) or "") in (None, False)
+              and (k := _place_key(j["location"])) and k not in cache}
     for k in sorted(places)[:MAX_PLACE_LOOKUPS]:
         _place(k, cache)
     for j in todo:
+        # a postcode nobody knows (e.g. Isle of Man) falls back to the town name
         hit = cache.get(_postcode_key(j["location"]) or "") or cache.get(_place_key(j["location"]) or "")
         if hit:
             j["lat"], j["lng"] = hit
