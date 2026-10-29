@@ -166,5 +166,15 @@ EXPERIENCE_PATTERNS = [
     r"2\s+years?\s+nhs\s+experience", r"two\s+years?\s+nhs\s+experience",
     r"previous\s+nhs\s+experience\s+(essential|required)",
 ]
+# Reed's search is loose ("care assistant" also finds "IT Support Engineer"), so a job only stays in
+# "Social care & support" when its TITLE is care work; anything else moves to "Other work".
+SOC_TITLE_PATTERN = re.compile(
+    r"\bcare\b|\bcarers?\b|caring|support worker|support assistant|health ?care assistant|nursing assistant|"
+    r"\bhca\b|enabler|domiciliary|live[- ]in|key ?worker|social work|mental health|learning disabilit|"
+    r"autis|outreach|reablement|residential|home ?care|safeguard", re.I)
+NOT_SOC_TITLE_PATTERN = re.compile(r"customer care", re.I)
+# Adverts for paid surveys, mystery shopping etc. posted as jobs: flagged "not-a-job"
+NOT_A_JOB_PATTERN = re.compile(
+    r"paid (research|surveys?)|mystery shop|focus groups?|share your opinion|product tester", re.I)
 OG_PATTERN = re.compile(r"obstetric|gynaecolog|obs ?(&|and) ?gynae|\bo&g\b|women'?s health|maternity", re.I)
 ENTRY_PATTERN = re.compile(r"\bfy[12]\b|foundation doctor|\bsho\b|core trainee|trust grade|junior (clinical|locally)", re.I)

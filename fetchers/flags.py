@@ -8,6 +8,11 @@ def flag(job):
     title = job["title"].lower()
     text = f"{title} {job['snippet']}".lower()
     flags, tags = set(job.get("flags", [])), set(job.get("tags", []))
+    if job["category"] == "soc" and (not config.SOC_TITLE_PATTERN.search(title)
+                                     or config.NOT_SOC_TITLE_PATTERN.search(title)):
+        job["category"] = "gen"
+    if config.NOT_A_JOB_PATTERN.search(text):
+        flags.add("not-a-job")
     if config.OG_PATTERN.search(text):
         tags.add("O&G")
     if config.ENTRY_PATTERN.search(text):
