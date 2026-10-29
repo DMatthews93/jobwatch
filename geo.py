@@ -11,6 +11,9 @@ POSTCODE = re.compile(r"\b([A-Z]{1,2}\d[A-Z\d]?)\s*(\d[A-Z]{2})\b", re.I)
 SKIP_PLACES = {"remote", "uk", "united kingdom", "england", "various", "nationwide",
                "home based", "home-based", "hybrid", "anywhere"}
 MAX_PLACE_LOOKUPS = 150
+# Areas postcodes.io doesn't list as places, mapped to their main town
+PLACE_ALIASES = {"orkney": "kirkwall", "orkney islands": "kirkwall", "shetland": "lerwick",
+                 "shetland islands": "lerwick"}
 
 
 def _load():
@@ -38,6 +41,7 @@ def _place_key(location):
     for part in (location or "").split(","):
         p = POSTCODE.sub("", part).strip().lower()
         p = re.sub(r"\s+(city|town)\s+centre$|\s+centre$", "", p)
+        p = PLACE_ALIASES.get(p, p)
         if len(p) > 2 and p not in SKIP_PLACES:
             return f"p3:{p}"
     return None
