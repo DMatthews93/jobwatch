@@ -1,5 +1,7 @@
 """Shared helpers: HTTP, text cleaning, salary/hours parsing, and the job shape."""
 import html
+import json
+import os
 import re
 import time
 from datetime import datetime
@@ -12,6 +14,34 @@ import config
 
 class SourceSkipped(Exception):
     """A fetcher deliberately did nothing (no key, disabled, not its turn)."""
+
+
+LAST_FETCH_FILE = os.path.join("data", "last_fetch.json")
+
+
+def last_fetched():
+    """{source: ISO time of its last successful fetch}, written by build.py."""
+    try:
+        with open(LAST_FETCH_FILE) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def due(name, hours, now):
+    """True when a source last fetched at least `hours` ago (or never, or on a manual run).
+    GitHub starts scheduled runs late or skips them, so this checks the time since the last fetch
+    rather than the clock. Ten minutes' slack so a slightly early run still counts."""
+    if os.getenv("FORCE_FETCH"):
+        return True
+    last = last_fetched().get(name)
+    if not last:
+        return True
+    try:
+        then = datetime.fromisoformat(last.replace("Z", "+00:00"))
+    except ValueError:
+        return True
+    return (now - then).total_seconds() >= hours * 3600 - 600
 
 
 _session = requests.Session()

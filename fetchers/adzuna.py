@@ -6,7 +6,7 @@ import os
 from datetime import datetime, timezone
 
 import config
-from fetchers.common import SourceSkipped, enrich, get, make_job, parse_date, strip_html
+from fetchers.common import SourceSkipped, due, enrich, get, make_job, parse_date, strip_html
 
 API = "https://api.adzuna.com/v1/api/jobs/gb/search/1"
 
@@ -18,7 +18,7 @@ def fetch(known):
     if not (app_id and app_key):
         raise SourceSkipped("ADZUNA_APP_ID / ADZUNA_APP_KEY not set")
     now = datetime.now(timezone.utc)
-    if now.hour % config.ADZUNA_EVERY_HOURS or now.minute >= 30:
+    if not due("adzuna", config.ADZUNA_EVERY_HOURS, now):
         raise SourceSkipped("not Adzuna's turn this run")
     jobs = {}
     for words, category in config.REED_QUERIES:

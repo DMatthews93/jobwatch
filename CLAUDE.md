@@ -35,7 +35,8 @@ care work, admin, customer support and aesthetics). GitHub Actions runs every
 - Categories: nhs, priv, res, adj, soc, gen (other work), aes (aesthetics).
 - NHS Jobs also gets extra searches without the staff-group filter, because
   BPAS/MSI advertise there with pay scheme "Other".
-- Reed runs every 2 hours (manual runs force it). Care/other work is searched
+- Reed runs when its last fetch (data/last_fetch.json) is 2+ hours old; manual runs force it
+  (GitHub often skips scheduled runs, so a clock-based rule rarely fired). Care/other work is searched
   within 25 miles, medical within 150.
 - Pay: National Living Wage £12.71/h (update each April), full time 37.5h.
 - Salary filter: by default a job shows only if its whole pay range is inside

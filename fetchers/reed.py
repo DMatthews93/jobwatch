@@ -4,7 +4,7 @@ import re
 from datetime import datetime, timezone
 
 import geo
-from fetchers.common import SourceSkipped, clean, enrich, get, make_job, parse_date, strip_html
+from fetchers.common import SourceSkipped, clean, due, enrich, get, make_job, parse_date, strip_html
 import config
 
 API = "https://www.reed.co.uk/api/1.0/search"
@@ -22,9 +22,8 @@ def fetch(known):
     if not key:
         raise SourceSkipped("REED_API_KEY not set")
     now = datetime.now(timezone.utc)
-    if not os.getenv("FORCE_FETCH") and config.REED_EVERY_HOURS > 1 and (
-            now.hour % config.REED_EVERY_HOURS or now.minute >= 30):
-        raise SourceSkipped("not Reed's turn this run (runs every few hours)")
+    if not due("reed", config.REED_EVERY_HOURS, now):
+        raise SourceSkipped("not Reed's turn this run (it fetched less than 2 hours ago)")
     jobs = {}
     for words, category in config.REED_QUERIES:
         skip = 0

@@ -37,6 +37,8 @@ jobs:
         env:
           SEARCH_POSTCODE: ${{ secrets.SEARCH_POSTCODE }}
           REED_API_KEY: ${{ secrets.REED_API_KEY }}
+          # "Run workflow" by hand fetches Reed (and Adzuna) even if it isn't their turn
+          FORCE_FETCH: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}
           # Adzuna is a paid API and stays off unless you add these three:
           ENABLE_ADZUNA: ${{ secrets.ENABLE_ADZUNA }}
           ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}

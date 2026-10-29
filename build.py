@@ -9,7 +9,7 @@ import config
 import geo
 import state
 from fetchers import adzuna, bmj, employers, hospitals, jobsac, nhs, reed
-from fetchers.common import SourceSkipped
+from fetchers.common import LAST_FETCH_FILE, SourceSkipped, last_fetched
 from fetchers.flags import flag
 from merge import merge
 
@@ -67,6 +67,12 @@ def main():
             continue
         ok.append(name)
         results.extend(jobs)
+
+    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    fetched = last_fetched() | {name: stamp for name in ok}
+    os.makedirs("data", exist_ok=True)
+    with open(LAST_FETCH_FILE, "w") as f:
+        json.dump(fetched, f, sort_keys=True, indent=0)
 
     results = [flag(j) for j in results]
     geo.geocode(results)
