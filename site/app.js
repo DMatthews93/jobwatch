@@ -18,6 +18,7 @@ const TOG = [
   ["ft", "Full time only", 1],
   ["nmw", "At least minimum wage", 1],
   ["clean", "Hide non-doctor &amp; other-specialty", 1],
+  ["nojob", "Hide survey &amp; non-job ads", 1],
   ["unk", "Include unknown locations", 0],
   ["closed", "Show closed &amp; stale", 0],
   ["mine", "My applications only", 0],
@@ -94,6 +95,7 @@ function filtered() {
         && (!on.ft || j.full_time !== false)
         && (!on.nmw || !j.salary_stated || j.salary_estimated || j.salary_min >= fl)
         && (!on.clean || !j.flags.some(f => f == "non-doctor-role" || f == "other-specialty"))
+        && (!on.nojob || !j.flags.includes("not-a-job"))
         && (on.closed || j.status == "open")
         && (!on.mine || s.st)
         && (on.hid || !s.hide)
